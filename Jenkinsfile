@@ -27,7 +27,6 @@ pipeline {
         stage('Build & Install Dependencies') {
             steps {
                 echo '📦 Resolving Maven dependencies...'
-                // Use local cache first (-o offline), fall back to online if needed
                 bat 'mvn dependency:resolve -B --no-transfer-progress || echo Dependencies already cached'
             }
         }
@@ -60,6 +59,7 @@ pipeline {
                 allure([
                     includeProperties: false,
                     jdk: '',
+                    commandline: 'allure',
                     results: [[path: 'target/allure-results']]
                 ])
             }
