@@ -1,29 +1,20 @@
 pipeline {
     agent any
 
-    // ── Environment variables ─────────────────────────────────────────────
     environment {
-        JAVA_HOME         = tool name: 'JDK17', type: 'jdk'
-        MAVEN_HOME        = tool name: 'Maven3', type: 'maven'
-        PATH              = "${JAVA_HOME}/bin:${MAVEN_HOME}/bin:${PATH}"
-        SLACK_CHANNEL     = '#jenkins-qa'
-        EMAIL_RECIPIENTS  = credentials('EMAIL_RECIPIENTS')
+        SLACK_CHANNEL = '#all-jolly'
     }
 
-    // ── Build triggers ────────────────────────────────────────────────────
-    triggers {
-        // Triggered by GitHub webhook on every push
-        githubPush()
-    }
-
-    // ── Options ───────────────────────────────────────────────────────────
     options {
         buildDiscarder(logRotator(numToKeepStr: '10'))
         timestamps()
         timeout(time: 30, unit: 'MINUTES')
     }
 
-    // ── Stages ────────────────────────────────────────────────────────────
+    triggers {
+        githubPush()
+    }
+
     stages {
 
         stage('Checkout') {
@@ -36,18 +27,17 @@ pipeline {
         stage('Build & Install Dependencies') {
             steps {
                 echo '📦 Installing Maven dependencies...'
-                sh 'mvn dependency:go-offline -B --no-transfer-progress'
+                bat 'mvn dependency:go-offline -B --no-transfer-progress'
             }
         }
 
         stage('Run API Tests') {
             steps {
                 echo '🧪 Running REST Assured API tests...'
-                sh 'mvn test -B --no-transfer-progress -Dmaven.test.failure.ignore=true'
+                bat 'mvn test -B --no-transfer-progress -Dmaven.test.failure.ignore=true'
             }
             post {
                 always {
-                    echo '📊 Collecting JUnit test results...'
                     junit testResults: 'target/surefire-reports/*.xml',
                           allowEmptyResults: true
                 }
@@ -57,19 +47,15 @@ pipeline {
         stage('Generate Allure Report') {
             steps {
                 echo '📈 Generating Allure report...'
-                sh 'mvn allure:report -B --no-transfer-progress'
+                bat 'mvn allure:report -B --no-transfer-progress'
             }
         }
 
         stage('Publish Reports') {
             steps {
-                echo '📁 Publishing test reports...'
-
-                // Archive Surefire XML reports
+                echo '📁 Archiving test reports...'
                 archiveArtifacts artifacts: 'target/surefire-reports/**',
                                  allowEmptyArchive: true
-
-                // Publish Allure HTML report via Allure Jenkins Plugin
                 allure([
                     includeProperties: false,
                     jdk: '',
@@ -79,98 +65,61 @@ pipeline {
         }
     }
 
-    // ── Post-build actions ────────────────────────────────────────────────
     post {
 
         success {
             echo '✅ All tests passed!'
-
-            // Slack success notification
             slackSend(
                 channel: env.SLACK_CHANNEL,
                 color: 'good',
-                message: """
-*✅ Jenkins QA Pipeline — PASSED*
-*Job:* ${env.JOB_NAME} #${env.BUILD_NUMBER}
-*Branch:* ${env.GIT_BRANCH}
-*Duration:* ${currentBuild.durationString}
-*View:* ${env.BUILD_URL}
-                """.stripIndent()
+                message: "✅ *Jenkins QA Pipeline — PASSED*\n*Job:* ${env.JOB_NAME} #${env.BUILD_NUMBER}\n*Duration:* ${currentBuild.durationString}\n*View:* ${env.BUILD_URL}"
             )
-
-            // Email success notification
             mail(
-                to: env.EMAIL_RECIPIENTS,
+                to: 'gift.burabyo@amalitechtraining.org',
                 subject: "[PASSED] Jenkins QA Tests — Build #${env.BUILD_NUMBER}",
-                body: """
-Jenkins QA Pipeline — BUILD PASSED ✅
+                body: """Jenkins QA Pipeline — BUILD PASSED ✅
 
 Job:      ${env.JOB_NAME}
 Build:    #${env.BUILD_NUMBER}
-Branch:   ${env.GIT_BRANCH}
 Duration: ${currentBuild.durationString}
+View:     ${env.BUILD_URL}
 
-View full report: ${env.BUILD_URL}allure/
-
-All API tests passed successfully.
-                """.stripIndent()
+All API tests passed successfully."""
             )
         }
 
         failure {
             echo '❌ Build failed!'
-
-            // Slack failure notification
             slackSend(
                 channel: env.SLACK_CHANNEL,
                 color: 'danger',
-                message: """
-*❌ Jenkins QA Pipeline — FAILED*
-*Job:* ${env.JOB_NAME} #${env.BUILD_NUMBER}
-*Branch:* ${env.GIT_BRANCH}
-*Duration:* ${currentBuild.durationString}
-*View:* ${env.BUILD_URL}
-                """.stripIndent()
+                message: "❌ *Jenkins QA Pipeline — FAILED*\n*Job:* ${env.JOB_NAME} #${env.BUILD_NUMBER}\n*Duration:* ${currentBuild.durationString}\n*View:* ${env.BUILD_URL}"
             )
-
-            // Email failure notification
             mail(
-                to: env.EMAIL_RECIPIENTS,
+                to: 'gift.burabyo@amalitechtraining.org',
                 subject: "[FAILED] Jenkins QA Tests — Build #${env.BUILD_NUMBER}",
-                body: """
-Jenkins QA Pipeline — BUILD FAILED ❌
+                body: """Jenkins QA Pipeline — BUILD FAILED ❌
 
 Job:      ${env.JOB_NAME}
 Build:    #${env.BUILD_NUMBER}
-Branch:   ${env.GIT_BRANCH}
 Duration: ${currentBuild.durationString}
+View:     ${env.BUILD_URL}console
 
-View console output: ${env.BUILD_URL}console
-
-One or more tests failed. Please review the report and fix the issues.
-                """.stripIndent()
+One or more tests failed. Please review the report."""
             )
         }
 
         unstable {
             echo '⚠️ Build unstable — some tests failed.'
-
             slackSend(
                 channel: env.SLACK_CHANNEL,
                 color: 'warning',
-                message: """
-*⚠️ Jenkins QA Pipeline — UNSTABLE*
-*Job:* ${env.JOB_NAME} #${env.BUILD_NUMBER}
-*Branch:* ${env.GIT_BRANCH}
-*Duration:* ${currentBuild.durationString}
-*View:* ${env.BUILD_URL}
-                """.stripIndent()
+                message: "⚠️ *Jenkins QA Pipeline — UNSTABLE*\n*Job:* ${env.JOB_NAME} #${env.BUILD_NUMBER}\n*Duration:* ${currentBuild.durationString}\n*View:* ${env.BUILD_URL}"
             )
         }
 
         always {
-            echo '🧹 Cleaning up workspace...'
-            cleanWs()
+            echo '🧹 Done.'
         }
     }
 }
