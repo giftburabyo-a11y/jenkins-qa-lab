@@ -12,8 +12,8 @@ import static io.restassured.RestAssured.given;
 
 public class BaseTest {
 
-    protected static final String BASE_URL = "https://reqres.in";
-    protected static final String API_PATH = "/api";
+    protected static final String BASE_URL = "https://fakestoreapi.com";
+    protected static final String API_PATH = "";
     protected static final String API_KEY  =
             "pro_05d2f318d72c9ec9948a1b522f63d43849e4266a47b3ad896d947a4d1f4d79c4";
 

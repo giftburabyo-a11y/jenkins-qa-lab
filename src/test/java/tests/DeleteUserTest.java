@@ -13,14 +13,14 @@ public class DeleteUserTest extends BaseTest {
     @Test
     @Story("Delete User")
     @Severity(SeverityLevel.CRITICAL)
-    @DisplayName("DELETE /users/{id} returns 204 No Content")
-    @Description("Verify that deleting an existing user returns HTTP 204 with no body")
+    @DisplayName("DELETE /users/{id} returns 200 with deleted user info")
+    @Description("Verify that deleting an existing user returns HTTP 200")
     public void testDeleteUser() {
         spec()
                 .when()
                 .delete("/users/2")
                 .then()
-                .statusCode(204)
-                .body(equalTo(""));
+                .statusCode(200)
+                .body("id", equalTo(2));
     }
 }

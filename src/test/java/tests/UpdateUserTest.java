@@ -20,8 +20,8 @@ public class UpdateUserTest extends BaseTest {
     @Description("Verify that a full PUT update returns 200 with updated name and job fields")
     public void testPutUpdateUser() {
         Map<String, String> body = new HashMap<>();
-        body.put("name", "Updated Name");
-        body.put("job", "Senior QA");
+        body.put("email", "updated@test.com");
+        body.put("username", "updated_user");
 
         spec()
                 .body(body)
@@ -29,9 +29,8 @@ public class UpdateUserTest extends BaseTest {
                 .put("/users/2")
                 .then()
                 .statusCode(200)
-                .body("name", equalTo("Updated Name"))
-                .body("job", equalTo("Senior QA"))
-                .body("updatedAt", notNullValue());
+                .body("email", equalTo("updated@test.com"))
+                .body("username", equalTo("updated_user"));
     }
 
     @Test
@@ -41,7 +40,7 @@ public class UpdateUserTest extends BaseTest {
     @Description("Verify that a PATCH with only the job field updates it and returns 200")
     public void testPatchUpdateUser() {
         Map<String, String> body = new HashMap<>();
-        body.put("job", "Lead QA Engineer");
+        body.put("username", "patched_user");
 
         spec()
                 .body(body)
@@ -49,7 +48,6 @@ public class UpdateUserTest extends BaseTest {
                 .patch("/users/2")
                 .then()
                 .statusCode(200)
-                .body("job", equalTo("Lead QA Engineer"))
-                .body("updatedAt", notNullValue());
+                .body("username", equalTo("patched_user"));
     }
 }

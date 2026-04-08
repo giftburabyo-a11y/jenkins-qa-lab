@@ -20,8 +20,9 @@ public class CreateUserTest extends BaseTest {
     @Description("Verify that creating a user returns 201 with the correct name, job and an auto-generated ID")
     public void testCreateUser() {
         Map<String, String> body = new HashMap<>();
-        body.put("name", "Nysara");
-        body.put("job", "QA Engineer");
+        body.put("email", "nysara@example.com");
+        body.put("username", "nysara");
+        body.put("password", "strongpass");
 
         spec()
                 .body(body)
@@ -29,10 +30,7 @@ public class CreateUserTest extends BaseTest {
                 .post("/users")
                 .then()
                 .statusCode(201)
-                .body("name", equalTo("Nysara"))
-                .body("job", equalTo("QA Engineer"))
-                .body("id", notNullValue())
-                .body("createdAt", notNullValue());
+                .body("id", notNullValue());
     }
 
     @Test
@@ -42,7 +40,7 @@ public class CreateUserTest extends BaseTest {
     @Description("Verify that a partial payload with just a name field still creates a user")
     public void testCreateUserWithNameOnly() {
         Map<String, String> body = new HashMap<>();
-        body.put("name", "TestUser");
+        body.put("username", "TestUser");
 
         spec()
                 .body(body)
@@ -50,7 +48,6 @@ public class CreateUserTest extends BaseTest {
                 .post("/users")
                 .then()
                 .statusCode(201)
-                .body("name", equalTo("TestUser"))
                 .body("id", notNullValue());
     }
 }
