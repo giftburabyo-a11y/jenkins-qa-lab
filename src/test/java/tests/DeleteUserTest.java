@@ -1,5 +1,6 @@
 package tests;
 
+import base.BaseTest;
 import io.qameta.allure.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
