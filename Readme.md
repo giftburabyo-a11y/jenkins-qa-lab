@@ -1,6 +1,6 @@
 # Jenkins QA Lab — REST Assured API Test Suite
 
-Automated API tests for [reqres.in](https://reqres.in) using REST Assured + JUnit 5, executed via a Jenkins CI/CD pipeline.
+Automated API tests using REST Assured + JUnit 5, executed via a Jenkins CI/CD pipeline.
 
 ## Test Coverage
 
